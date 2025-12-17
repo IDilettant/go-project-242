@@ -1,7 +1,6 @@
 package code
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -40,8 +39,3 @@ func GetSize(path string) (int64, error) {
 
 	return total, nil
 }
-
-func FormatSizeOutput(size int64, path string) string {
-	return fmt.Sprintf("%d\t%s", size, path)
-}
-
