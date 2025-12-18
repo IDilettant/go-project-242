@@ -9,6 +9,7 @@ import (
 	"code/pkg/code"
 )
 
+// New
 func New() *cli.Command {
 	return &cli.Command{
 		Name:      "hexlet-path-size",
@@ -20,8 +21,13 @@ func New() *cli.Command {
 				Aliases: []string{"H"},
 				Usage:   "human-readable sizes (auto-select unit)",
 			},
+			&cli.BoolFlag{
+				Name:    "all",
+				Aliases: []string{"a"},
+				Usage:   "include hidden files and directories",
+			},
 		},
-		Action: func(ctx context.Context, cmd *cli.Command) error {
+		Action: func(_ context.Context, cmd *cli.Command) error {
 			if cmd.Args().Len() != 1 {
 				_ = cli.ShowRootCommandHelp(cmd)
 
@@ -30,7 +36,11 @@ func New() *cli.Command {
 
 			path := cmd.Args().First()
 
-			size, err := code.GetSize(path)
+			opts := code.Options{
+				All: cmd.Bool("all"),
+			}
+
+			size, err := code.GetSize(path, opts)
 			if err != nil {
 				return cli.Exit(err.Error(), 1)
 			}
