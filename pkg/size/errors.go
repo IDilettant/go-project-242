@@ -1,4 +1,4 @@
-package code
+package size
 
 import "errors"
 
