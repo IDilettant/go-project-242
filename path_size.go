@@ -12,6 +12,23 @@ type Options struct {
 	Recursive bool
 }
 
+// GetPathSize returns the formatted size of a file or directory with optional flags.
+func GetPathSize(path string, recursive, human, all bool) (string, error) {
+	opts := Options{
+		All:       all,
+		Recursive: recursive,
+	}
+
+	size, err := GetSize(path, opts)
+	if err != nil {
+		return "", err
+	}
+
+	formatedSize := FormatSize(size, human)
+
+	return formatedSize, nil
+}
+
 // GetSize returns size of a file or, for a directory, sums sizes of files in the first level
 func GetSize(path string, opts Options) (int64, error) {
 	if !opts.All && isHidden(path) {

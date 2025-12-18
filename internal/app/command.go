@@ -44,18 +44,12 @@ func New() *cli.Command {
 
 			path := cmd.Args().First()
 
-			opts := code.Options{
-				All:       cmd.Bool("all"),
-				Recursive: cmd.Bool("recursive"),
-			}
-
-			size, err := code.GetSize(path, opts)
+			output, err := code.GetPathSize(path, cmd.Bool("recursive"), cmd.Bool("human"), cmd.Bool("all"))
 			if err != nil {
 				return cli.Exit(err.Error(), 1)
 			}
 
-			sizeStr := code.FormatSize(size, cmd.Bool("human"))
-			fmt.Println(code.FormatOutput(sizeStr, path))
+			fmt.Println(output)
 
 			return nil
 		},
