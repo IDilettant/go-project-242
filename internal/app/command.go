@@ -6,7 +6,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"code/pkg/code"
+	"code/code"
 )
 
 // New application constructor

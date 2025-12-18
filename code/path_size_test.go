@@ -49,6 +49,12 @@ func TestGetSize(t *testing.T) {
 			want: 19,
 		},
 		{
+			name: "dir/dirA recursive excludes hidden files",
+			path: filepath.Join(td, "dirA"),
+			opts: Options{All: false, Recursive: true},
+			want: 14,
+		},
+		{
 			name: "dir/dirA recursive ignores hidden",
 			path: filepath.Join(td, "dirA"),
 			opts: Options{All: false, Recursive: true},
@@ -106,15 +112,18 @@ func TestGetSize(t *testing.T) {
 				if err == nil {
 					t.Fatalf("expected error, got nil (size=%d)", got)
 				}
+
 				if tt.errAssert != nil && !tt.errAssert(err) {
 					t.Fatalf("unexpected error: %v", err)
 				}
+
 				return
 			}
 
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+
 			if got != tt.want {
 				t.Fatalf("size mismatch: got %d, want %d", got, tt.want)
 			}
