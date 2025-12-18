@@ -24,7 +24,7 @@ func FormatSize(size int64, human bool) string {
 		unit++
 	}
 
-	if isRound(value) {
+	if unit == 0 {
 		return fmt.Sprintf("%d%s", int64(value), units[unit])
 	}
 
@@ -34,8 +34,4 @@ func FormatSize(size int64, human bool) string {
 // FormatOutput formats size and path as a single output line.
 func FormatOutput(sizeStr, path string) string {
 	return fmt.Sprintf("%s\t%s", sizeStr, path)
-}
-
-func isRound(v float64) bool {
-	return v == float64(int64(v))
 }

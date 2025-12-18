@@ -16,14 +16,14 @@ func TestFormatSize(t *testing.T) {
 		{"human zero", 0, true, "0B"},
 		{"human below kb", 1023, true, "1023B"},
 
-		{"exact kb", 1024, true, "1KB"},
-		{"exact mb", 1024 * 1024, true, "1MB"},
-		{"exact gb", 1024 * 1024 * 1024, true, "1GB"},
+		{"exact kb", 1024, true, "1.0KB"},
+		{"exact mb", 1024 * 1024, true, "1.0MB"},
+		{"exact gb", 1024 * 1024 * 1024, true, "1.0GB"},
 
 		{"fractional kb", 1536, true, "1.5KB"},
 		{"fractional mb", 1234567, true, "1.2MB"},
 
-		{"clamp to tb", 1 << 50, true, "1PB"},
+		{"clamp to tb", 1 << 50, true, "1.0PB"},
 	}
 
 	for _, tt := range tests {
@@ -69,4 +69,3 @@ func TestFormatOutput(t *testing.T) {
 		})
 	}
 }
-
