@@ -53,7 +53,8 @@ func TestGetSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetSize(tt.path)
+			opts := Options{}
+			got, err := GetSize(tt.path, opts)
 
 			if tt.wantErr {
 				if err == nil {
@@ -73,6 +74,64 @@ func TestGetSize(t *testing.T) {
 
 			if got != tt.want {
 				t.Fatalf("size mismatch: got %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetSize_HiddenFiltering(t *testing.T) {
+	td := filepath.Join("testdata")
+
+	tests := []struct {
+		name    string
+		path    string
+		all     bool
+		want    int64
+		wantErr bool
+	}{
+		{
+			name: "dir ignores hidden when all=false",
+			path: filepath.Join(td, "dirA"),
+			all:  false,
+			want: 10,
+		},
+		{
+			name: "dir includes hidden files when all=true",
+			path: filepath.Join(td, "dirA"),
+			all:  true,
+			want: 19,
+		},
+		{
+			name: "hidden file path ignored when all=false",
+			path: filepath.Join(td, "dirA", ".hidden_9b.txt"),
+			all:  false,
+			want: 0,
+		},
+		{
+			name: "hidden file path counted when all=true",
+			path: filepath.Join(td, "dirA", ".hidden_9b.txt"),
+			all:  true,
+			want: 9,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			opts := Options{All: tt.all}
+			got, err := GetSize(tt.path, opts)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil (size=%d)", got)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Fatalf("got %d, want %d", got, tt.want)
 			}
 		})
 	}
