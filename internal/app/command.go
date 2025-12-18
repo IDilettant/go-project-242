@@ -9,7 +9,7 @@ import (
 	"code/pkg/code"
 )
 
-// New
+// New application constructor
 func New() *cli.Command {
 	return &cli.Command{
 		Name:      "hexlet-path-size",
@@ -26,6 +26,11 @@ func New() *cli.Command {
 				Aliases: []string{"a"},
 				Usage:   "include hidden files and directories",
 			},
+			&cli.BoolFlag{
+				Name:    "recursive",
+				Aliases: []string{"r"},
+				Usage:   "recursive size of directories",
+			},
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
 			if cmd.Args().Len() != 1 {
@@ -37,7 +42,8 @@ func New() *cli.Command {
 			path := cmd.Args().First()
 
 			opts := code.Options{
-				All: cmd.Bool("all"),
+				All:       cmd.Bool("all"),
+				Recursive: cmd.Bool("recursive"),
 			}
 
 			size, err := code.GetSize(path, opts)
