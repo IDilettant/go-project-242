@@ -1,6 +1,10 @@
 package size
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestFormatSize(t *testing.T) {
 	tests := []struct {
@@ -28,10 +32,10 @@ func TestFormatSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FormatSize(tt.size, tt.human); got != tt.want {
-				t.Fatalf("FormatSize(%d, %v) = %q, want %q",
-					tt.size, tt.human, got, tt.want)
-			}
+			t.Parallel()
+
+			got := FormatSize(tt.size, tt.human)
+			require.Equalf(t, tt.want, got, "FormatSize(%d, %v)", tt.size, tt.human)
 		})
 	}
 }
@@ -62,10 +66,11 @@ func TestFormatOutput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := FormatOutput(tt.sizeStr, tt.path)
-			if got != tt.want {
-				t.Fatalf("FormatOutput(%q, %q) = %q, want %q", tt.sizeStr, tt.path, got, tt.want)
-			}
+			require.Equalf(t, tt.want, got, "FormatOutput(%q, %q)", tt.sizeStr, tt.path)
 		})
 	}
 }
+

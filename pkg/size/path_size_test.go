@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetSize(t *testing.T) {
@@ -106,27 +108,22 @@ func TestGetSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := GetSize(tt.path, tt.opts)
 
 			if tt.wantErr {
-				if err == nil {
-					t.Fatalf("expected error, got nil (size=%d)", got)
-				}
-
-				if tt.errAssert != nil && !tt.errAssert(err) {
-					t.Fatalf("unexpected error: %v", err)
+				require.Error(t, err)
+				if tt.errAssert != nil {
+					require.Truef(t, tt.errAssert(err), "unexpected error: %v", err)
 				}
 
 				return
 			}
 
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
-			if got != tt.want {
-				t.Fatalf("size mismatch: got %d, want %d", got, tt.want)
-			}
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
 		})
 	}
 }
+
