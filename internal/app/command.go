@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/cli/v3"
 
 	"code"
+	"code/pkg/size"
 )
 
 // New application constructor
@@ -44,7 +45,7 @@ func New() *cli.Command {
 
 			path := cmd.Args().First()
 
-			output, err := code.GetPathSize(
+			pathSize, err := code.GetPathSize(
 				path,
 				cmd.Bool("recursive"),
 				cmd.Bool("human"),
@@ -53,6 +54,8 @@ func New() *cli.Command {
 			if err != nil {
 				return cli.Exit(err.Error(), 1)
 			}
+
+			output := size.FormatOutput(pathSize, path)
 
 			fmt.Println(output)
 
