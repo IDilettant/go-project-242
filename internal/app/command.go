@@ -44,7 +44,12 @@ func New() *cli.Command {
 
 			path := cmd.Args().First()
 
-			output, err := code.GetPathSize(path, cmd.Bool("recursive"), cmd.Bool("human"), cmd.Bool("all"))
+			output, err := code.GetPathSize(
+				path,
+				cmd.Bool("recursive"),
+				cmd.Bool("human"),
+				cmd.Bool("all"),
+			)
 			if err != nil {
 				return cli.Exit(err.Error(), 1)
 			}
