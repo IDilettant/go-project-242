@@ -1,24 +1,50 @@
 package size
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	filePerm = 0o644
+	dirPerm  = 0o755
+)
+
+func writeFile(t *testing.T, path string, data []byte) {
+	t.Helper()
+
+	require.NoError(t, os.WriteFile(path, data, filePerm))
+}
+
+func mkdirAll(t *testing.T, path string) {
+	t.Helper()
+
+	require.NoError(t, os.MkdirAll(path, dirPerm))
+}
+
+func makeSymlink(t *testing.T, target, link string) {
+	t.Helper()
+
+	require.NoError(t, os.Symlink(target, link))
+}
+
 func TestGetSize(t *testing.T) {
 	td := filepath.Join("testdata")
 
-	tests := []struct {
+	type testCase struct {
 		name      string
 		path      string
 		opts      Options
 		want      int64
-		wantErr   bool
 		errAssert func(error) bool
-	}{
+	}
+
+	tests := []testCase{
 		{
 			name: "file/regular",
 			path: filepath.Join(td, "file_5b.txt"),
@@ -57,12 +83,6 @@ func TestGetSize(t *testing.T) {
 			want: 14,
 		},
 		{
-			name: "dir/dirA recursive ignores hidden",
-			path: filepath.Join(td, "dirA"),
-			opts: Options{All: false, Recursive: true},
-			want: 14,
-		},
-		{
 			name: "dir/dirA recursive includes hidden files and directories",
 			path: filepath.Join(td, "dirA"),
 			opts: Options{All: true, Recursive: true},
@@ -96,13 +116,18 @@ func TestGetSize(t *testing.T) {
 		},
 
 		{
-			name:    "error/path does not exist",
-			path:    filepath.Join(td, "no_such_path"),
-			opts:    Options{},
-			wantErr: true,
+			name: "error/path does not exist",
+			path: filepath.Join(td, "no_such_path"),
+			opts: Options{},
 			errAssert: func(err error) bool {
 				return os.IsNotExist(err)
 			},
+		},
+		{
+			name: "file/unicode name",
+			path: filepath.Join(td, "файл_6b.txt"),
+			opts: Options{},
+			want: 6,
 		},
 	}
 
@@ -110,14 +135,106 @@ func TestGetSize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := GetSize(tt.path, tt.opts)
+			path := tt.path
 
-			if tt.wantErr {
+			got, err := GetSize(path, tt.opts)
+
+			if tt.errAssert != nil {
 				require.Error(t, err)
-				if tt.errAssert != nil {
-					require.Truef(t, tt.errAssert(err), "unexpected error: %v", err)
-				}
+				require.Truef(t, tt.errAssert(err), "unexpected error: %v", err)
 
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestGetSize_Symlinks(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink tests are skipped on windows")
+	}
+
+	type testCase struct {
+		name      string
+		opts      Options
+		want      int64
+		errAssert func(error) bool
+		setup     func(t *testing.T) string
+	}
+
+	tests := []testCase{
+		{
+			name: "in-dir ignored when summing",
+			opts: Options{All: true, Recursive: false},
+			want: 5,
+			setup: func(t *testing.T) string {
+				t.Helper()
+
+				dir := t.TempDir()
+
+				target := filepath.Join(dir, "file_5b.txt")
+				writeFile(t, target, []byte("12345"))
+
+				link := filepath.Join(dir, "link_to_file")
+				makeSymlink(t, target, link)
+
+				return dir
+			},
+		},
+		{
+			name: "to-dir ignored even in recursive mode",
+			opts: Options{All: true, Recursive: true},
+			want: 4,
+			setup: func(t *testing.T) string {
+				t.Helper()
+
+				dir := t.TempDir()
+
+				realSub := filepath.Join(dir, "subdir")
+				mkdirAll(t, realSub)
+
+				writeFile(t, filepath.Join(realSub, "a_4b.txt"), []byte("1234"))
+
+				linkSub := filepath.Join(dir, "link_to_subdir")
+				makeSymlink(t, realSub, linkSub)
+
+				return dir
+			},
+		},
+		{
+			name: "root path unsupported",
+			opts: Options{},
+			errAssert: func(err error) bool {
+				return err != nil && errors.Is(err, ErrUnsupportedFileType)
+			},
+			setup: func(t *testing.T) string {
+				t.Helper()
+
+				dir := t.TempDir()
+
+				target := filepath.Join(dir, "file_3b.txt")
+				writeFile(t, target, []byte("123"))
+
+				link := filepath.Join(dir, "link_root")
+				makeSymlink(t, target, link)
+
+				return link
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run("symlink/"+tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			path := tt.setup(t)
+			got, err := GetSize(path, tt.opts)
+
+			if tt.errAssert != nil {
+				require.Truef(t, tt.errAssert(err), "unexpected error: %v", err)
 				return
 			}
 
