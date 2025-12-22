@@ -23,20 +23,30 @@ func GetSize(path string, opts Options) (int64, error) {
 		return 0, err
 	}
 
-	if info.Mode().IsRegular() {
-		return info.Size(), nil
-	}
+	switch {
+	case info.Mode().IsRegular():
+		return getFileSize(info), nil
 
-	if !info.IsDir() {
+	case info.IsDir():
+		return getDirSize(path, opts)
+
+	default:
 		return 0, fmt.Errorf("%w: %s", ErrUnsupportedFileType, path)
 	}
+}
 
+func getFileSize(info os.FileInfo) int64 {
+	return info.Size()
+}
+
+func getDirSize(path string, opts Options) (int64, error) {
 	entries, err := os.ReadDir(path)
 	if err != nil {
 		return 0, err
 	}
 
 	var total int64
+
 	for _, e := range entries {
 		name := e.Name()
 
@@ -51,21 +61,17 @@ func GetSize(path string, opts Options) (int64, error) {
 			return 0, err
 		}
 
-		if childInfo.IsDir() {
-			if !opts.Recursive {
-				continue
-			}
+		switch {
+		case childInfo.Mode().IsRegular():
+			total += getFileSize(childInfo)
 
-			dirSize, err := GetSize(childPath, opts)
+		case childInfo.IsDir() && opts.Recursive:
+			dirSize, err := getDirSize(childPath, opts)
 			if err != nil {
 				return 0, err
 			}
 
 			total += dirSize
-		}
-
-		if childInfo.Mode().IsRegular() {
-			total += childInfo.Size()
 		}
 	}
 
