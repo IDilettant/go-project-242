@@ -63,7 +63,6 @@ func TestGetSize(t *testing.T) {
 			opts: Options{},
 			want: 0,
 		},
-
 		{
 			name: "dir/dirA non-recursive ignores hidden and nested",
 			path: filepath.Join(td, "dirA"),
@@ -88,7 +87,6 @@ func TestGetSize(t *testing.T) {
 			opts: Options{All: true, Recursive: true},
 			want: 28,
 		},
-
 		{
 			name: "dir/dir_with_dir_only non-recursive",
 			path: filepath.Join(td, "dir_with_dir_only"),
@@ -101,7 +99,6 @@ func TestGetSize(t *testing.T) {
 			opts: Options{Recursive: true},
 			want: 2,
 		},
-
 		{
 			name: "hidden/file ignored when all=false",
 			path: filepath.Join(td, "dirA", ".hidden_9b.txt"),
@@ -114,7 +111,6 @@ func TestGetSize(t *testing.T) {
 			opts: Options{All: true},
 			want: 9,
 		},
-
 		{
 			name: "error/path does not exist",
 			path: filepath.Join(td, "no_such_path"),
@@ -234,7 +230,9 @@ func TestGetSize_Symlinks(t *testing.T) {
 			got, err := GetSize(path, tt.opts)
 
 			if tt.errAssert != nil {
+				require.Error(t, err)
 				require.Truef(t, tt.errAssert(err), "unexpected error: %v", err)
+
 				return
 			}
 
