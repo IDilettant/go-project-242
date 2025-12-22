@@ -1,7 +1,7 @@
 package code
 
 import (
-	"code/pkg/size"
+	"code/internal/size"
 )
 
 // GetPathSize returns the formatted size of a file or directory with optional flags.
