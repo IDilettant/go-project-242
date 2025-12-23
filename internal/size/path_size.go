@@ -12,7 +12,7 @@ type Options struct {
 	Recursive bool
 }
 
-// GetSize returns size of a file or, for a directory, sums sizes of files in the first level
+// GetSize returns size of a file or, for a directory, sums sizes of files
 func GetSize(path string, opts Options) (int64, error) {
 	if !opts.All && isHidden(path) {
 		return 0, nil
@@ -81,3 +81,4 @@ func getDirSize(path string, opts Options) (int64, error) {
 func isHidden(path string) bool {
 	return strings.HasPrefix(filepath.Base(path), ".")
 }
+
